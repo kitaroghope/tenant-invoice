@@ -1,6 +1,16 @@
 Options -MultiViews
 RewriteEngine On
-RewriteCond %{REQUEST_FILENAME} -f [OR]
-RewriteCond %{REQUEST_FILENAME} -d
+RewriteBase /
+
+# Serve real static assets and known file types as-is. This intentionally avoids
+# RewriteCond %{REQUEST_FILENAME} -f/-d — on at least one LiteSpeed subdomain
+# document-root setup those checks reported false for files that genuinely existed,
+# so every request (including the JS bundle itself) fell through to index.html and
+# was served with an HTML content-type, breaking the app entirely.
+RewriteCond %{REQUEST_URI} ^/assets/ [OR]
+RewriteCond %{REQUEST_URI} \.(js|mjs|css|json|txt|xml|ico|png|jpg|jpeg|gif|svg|webp|webmanifest|map|woff|woff2|ttf|eot)$ [NC]
 RewriteRule ^ - [L]
+
+# Everything else is a client-routed SPA path — hand it index.html and let React
+# Router take over.
 RewriteRule ^ index.html [L]

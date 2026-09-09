@@ -1,0 +1,18 @@
+node_modules/
+dist/
+.env
+.env.local
+*.local
+coverage/
+.DS_Store
+*.tsbuildinfo
+*.zip
+
+# Stray compiled output of vite.config.ts from an earlier tsc run — vite.config.ts is the
+# real source; these two are generated and shouldn't be tracked.
+vite.config.js
+vite.config.d.ts
+
+# Supabase CLI's local cache/link metadata (project ref, pooler host, tool versions) —
+# machine-local state, not project source. Standard `supabase init` excludes this too.
+supabase/.temp/

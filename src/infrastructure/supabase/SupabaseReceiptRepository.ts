@@ -1,6 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { BusinessId, PaymentId } from '../../domain/shared/EntityId'
-import type { Receipt, ReceiptRepository, ReceiptStatus } from '../../application/ports/ReceiptRepository'
+import type { Receipt, ReceiptLineItem, ReceiptRepository, ReceiptStatus } from '../../application/ports/ReceiptRepository'
 import type { PaymentMethod, PaymentStatus } from '../../application/ports/PaymentRepository'
 
 interface ReceiptRow {
@@ -10,6 +10,19 @@ interface ReceiptRow {
   issued_at: string
   void_reason: string | null
   payments: PaymentRelation | PaymentRelation[] | null
+}
+
+interface InvoiceLineRelation {
+  description: string
+  quantity: string | number
+  unit_price_minor_units: string | number
+  line_total_minor_units: string | number
+  position: number
+}
+
+interface InvoiceRelation {
+  invoice_number: number | null
+  invoice_line_items: InvoiceLineRelation[] | null
 }
 
 interface PaymentRelation {
@@ -22,10 +35,13 @@ interface PaymentRelation {
   payment_method: PaymentMethod
   reference: string | null
   status: PaymentStatus
+  invoices: InvoiceRelation | InvoiceRelation[] | null
 }
 
 const RECEIPT_COLUMNS =
-  'id, receipt_number, status, issued_at, void_reason, payments(id, customer_display_name, customer_email, amount_minor_units, currency_code, currency_exponent, payment_method, reference, status)'
+  'id, receipt_number, status, issued_at, void_reason, ' +
+  'payments(id, customer_display_name, customer_email, amount_minor_units, currency_code, currency_exponent, payment_method, reference, status, ' +
+  'invoices(invoice_number, invoice_line_items(description, quantity, unit_price_minor_units, line_total_minor_units, position)))'
 
 export class SupabaseReceiptRepository implements ReceiptRepository {
   public constructor(private readonly client: SupabaseClient) {}
@@ -59,6 +75,8 @@ export class SupabaseReceiptRepository implements ReceiptRepository {
   private toDomain(row: ReceiptRow): Receipt {
     const payment = Array.isArray(row.payments) ? row.payments[0] : row.payments
     if (!payment) throw new Error('Receipt is missing its payment record')
+    const invoiceRelation = Array.isArray(payment.invoices) ? payment.invoices[0] : payment.invoices
+
     return {
       id: row.id,
       receiptNumber: row.receipt_number,
@@ -76,6 +94,20 @@ export class SupabaseReceiptRepository implements ReceiptRepository {
         reference: payment.reference,
         status: payment.status,
       },
+      invoice: invoiceRelation
+        ? {
+            invoiceNumber: invoiceRelation.invoice_number,
+            lines: (invoiceRelation.invoice_line_items ?? [])
+              .slice()
+              .sort((a, b) => a.position - b.position)
+              .map((line): ReceiptLineItem => ({
+                description: line.description,
+                quantity: String(line.quantity),
+                unitPriceMinorUnits: BigInt(line.unit_price_minor_units),
+                lineTotalMinorUnits: BigInt(line.line_total_minor_units),
+              })),
+          }
+        : null,
     }
   }
 }

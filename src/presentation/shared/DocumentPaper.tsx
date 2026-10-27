@@ -23,7 +23,12 @@ const WATERMARKED_STATUSES = new Set(['DRAFT', 'VOID', 'PAID'])
 // everywhere instead of each page reimplementing its own "paper" markup.
 export function DocumentPaper({ business, documentType, statusLabel, billToLabel, billToName, numberLabel, numberValue, printFormat, children }: DocumentPaperProps) {
   const logoUrl = business.logoAssetPath ? container.businessRepository.getLogoUrl(business.logoAssetPath) : null
-  const style = { '--doc-accent': business.accentColor || '#17233d' } as CSSProperties
+  const accent = business.accentColor || '#17233d'
+  // Choose readable banner text even when the business selects a pale accent.
+  const rgb = accent.replace('#', '').match(/.{2}/g)?.map((part) => parseInt(part, 16) / 255) ?? [0, 0, 0]
+  const linear = rgb.map((value) => value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4)
+  const luminance = linear[0]! * 0.2126 + linear[1]! * 0.7152 + linear[2]! * 0.0722
+  const style = { '--doc-accent': accent, '--doc-accent-ink': luminance > 0.179 ? '#111111' : '#ffffff' } as CSSProperties
 
   return (
     <section className={`paper template-${business.templateId}${printFormat === 'thermal' ? ' thermal' : ''}`} style={style}>

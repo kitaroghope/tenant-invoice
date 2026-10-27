@@ -6,6 +6,7 @@ import { DocumentPaper } from '../shared/DocumentPaper'
 import { Business, type TemplateId } from '../../domain/business/Business'
 import { standardizeLogoFile } from '../shared/logoImage'
 import { ExportSection } from './ExportSection'
+import { documentTemplates } from '../shared/documentTemplates'
 
 interface FormState {
   legalName: string
@@ -54,6 +55,7 @@ export function SettingsPage({ business }: { business: Business }) {
   const [processingLogo, setProcessingLogo] = useState(false)
   const [formError, setFormError] = useState<string | null>(null)
   const [saved, setSaved] = useState(false)
+  const [previewType, setPreviewType] = useState<'invoice' | 'receipt'>('invoice')
 
   // The object URL is only ours to revoke while it points at a local blob preview — the
   // remote getLogoUrl() result for an already-saved logo is a real URL other code may still
@@ -194,9 +196,7 @@ export function SettingsPage({ business }: { business: Business }) {
             </label>
             <label>Template
               <select value={form.templateId} onChange={(event) => setForm((current) => ({ ...current, templateId: event.target.value as TemplateId }))}>
-                <option value="classic">Classic</option>
-                <option value="modern">Modern</option>
-                <option value="compact">Compact</option>
+                {documentTemplates.map((template) => <option key={template.id} value={template.id}>{template.name}{template.id === 'classic' ? ' — current design' : ''}</option>)}
               </select>
             </label>
             <label>Logo
@@ -211,6 +211,15 @@ export function SettingsPage({ business }: { business: Business }) {
               />
             </label>
           </div>
+          <div className="template-gallery" aria-label="Document designs">
+            {documentTemplates.map((template, index) => (
+              <button key={template.id} type="button" className={`template-card ${form.templateId === template.id ? 'selected' : ''}`} aria-pressed={form.templateId === template.id} onClick={() => { setSaved(false); setForm((current) => ({ ...current, templateId: template.id })) }}>
+                <span className={`template-mini mini-${template.id}`} style={{ '--doc-accent': form.accentColor } as React.CSSProperties} aria-hidden="true"><i /><i /><i /><i /></span>
+                <span><strong>{String(index + 1).padStart(2, '0')} · {template.name}</strong>{template.id === 'classic' && <em>Current · recommended</em>}<small>{template.description}</small></span>
+              </button>
+            ))}
+          </div>
+          <p className="form-hint">All 10 designs use your logo, accent color, business details and payment instructions for both invoices and receipts. Save changes to apply your selection.</p>
           {logoPreviewUrl && (
             <div className="logo-preview">
               <img src={logoPreviewUrl} alt="Logo preview" />
@@ -226,15 +235,19 @@ export function SettingsPage({ business }: { business: Business }) {
         </form>
 
         <div className="settings-preview no-print">
-          <span className="step-label">Preview</span>
+          <span className="step-label">Live preview</span>
+          <div className="template-preview-tabs" role="group" aria-label="Preview document type">
+            <button type="button" aria-pressed={previewType === 'invoice'} onClick={() => setPreviewType('invoice')}>Invoice</button>
+            <button type="button" aria-pressed={previewType === 'receipt'} onClick={() => setPreviewType('receipt')}>Receipt</button>
+          </div>
           <DocumentPaper
             business={previewBusiness}
-            documentType="INVOICE"
-            statusLabel="DRAFT"
-            billToLabel="Bill to"
+            documentType={previewType.toUpperCase()}
+            statusLabel={previewType === 'invoice' ? 'DRAFT' : 'PAID'}
+            billToLabel={previewType === 'invoice' ? 'Bill to' : 'Received from'}
             billToName="Sample Customer"
-            numberLabel="Invoice number"
-            numberValue={`${form.invoicePrefix}1`}
+            numberLabel={previewType === 'invoice' ? 'Invoice number' : 'Receipt number'}
+            numberValue={`${previewType === 'invoice' ? form.invoicePrefix : form.receiptPrefix}1`}
             printFormat="a4"
           >
             <table>
@@ -242,7 +255,7 @@ export function SettingsPage({ business }: { business: Business }) {
               <tbody><tr><td>Sample line item</td><td>1</td><td>100.00</td><td>100.00</td></tr></tbody>
             </table>
             <div className="totals">
-              <p className="grand"><span>Total</span><strong>100.00</strong></p>
+              <p className="grand"><span>{previewType === 'invoice' ? 'Total due' : 'Amount received'}</span><strong>100.00</strong></p>
             </div>
           </DocumentPaper>
         </div>

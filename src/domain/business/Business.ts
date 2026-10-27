@@ -1,7 +1,7 @@
 import { BusinessId } from '../shared/EntityId'
 import { ValidationError } from '../shared/DomainError'
 
-export type TemplateId = 'classic' | 'modern' | 'compact'
+export type TemplateId = 'classic' | 'modern' | 'compact' | 'minimal' | 'executive' | 'ledger' | 'ribbon' | 'editorial' | 'outlined' | 'sidebar'
 
 export interface BusinessBranding {
   addressLine1: string | null

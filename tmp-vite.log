@@ -1,0 +1,12 @@
+12:46:28 [vite] (client) Re-optimizing dependencies because vite config has changed
+
+  VITE v8.2.2  ready in 2519 ms
+
+  ➜  Local:   http://127.0.0.1:5500/
+  ➜  press h + enter to show help
+12:46:30 [vite] (client) [optimizer] bundling dependencies...
+13:15:04 [vite] (client) hmr update /src/presentation/styles.css
+13:33:48 [vite] (client) page reload index.html
+13:33:48 [vite] (client) hmr update /src/presentation/styles.css
+16:39:18 [vite] (client) hmr update /src/presentation/styles.css
+16:39:46 [vite] (client) hmr update /src/presentation/styles.css

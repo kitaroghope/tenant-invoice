@@ -55,8 +55,29 @@ export function ReceiptDetailPage({ business, receiptId }: { business: Business;
       numberValue={numberValue}
       printFormat={printFormat}
     >
-      <table>
-        <thead><tr><th>Method</th><th>Reference</th><th>Amount</th></tr></thead>
+      {data.invoice && data.invoice.lines.length > 0 && (
+        <>
+          {data.invoice.invoiceNumber && (
+            <p className="receipt-invoice-ref">For invoice {business.invoicePrefix ?? ''}{data.invoice.invoiceNumber}</p>
+          )}
+          <table>
+            <thead><tr><th>Description</th><th>Qty</th><th>Unit price</th><th>Amount</th></tr></thead>
+            <tbody>
+              {data.invoice.lines.map((line, index) => (
+                <tr key={index}>
+                  <td>{line.description}</td>
+                  <td>{line.quantity}</td>
+                  <td>{Money.fromMinorUnits(line.unitPriceMinorUnits, currency).format(business.locale)}</td>
+                  <td>{Money.fromMinorUnits(line.lineTotalMinorUnits, currency).format(business.locale)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </>
+      )}
+
+      <table className="receipt-payment-summary">
+        <thead><tr><th>Method</th><th>Reference</th><th>Amount received</th></tr></thead>
         <tbody>
           <tr>
             <td>{data.payment.paymentMethod.replace('_', ' ')}</td>

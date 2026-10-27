@@ -1,0 +1,46 @@
+# devsync — what gets uploaded.
+# gitignore syntax. One pattern per line, ! negates.
+# This is NOT .gitignore: these files are usually gitignored but still needed live.
+#
+# The hard blocklist always wins and cannot be overridden here:
+#   .env
+#   .env.*
+#   *.pem
+#   *.key
+#   *.p12
+#   *.pfx
+#   id_rsa
+#   id_rsa.pub
+#   id_ed25519
+#   .git/
+#   .svn/
+#   .hg/
+#   node_modules/
+
+# --- secrets and local state (keep off the server) ---
+*.local.php
+*.sql
+*.sqlite
+*.sqlite3
+*.dump
+.env.production.local
+config.local.php
+
+# --- build scratch ---
+/scratch/
+/tmp/
+/backups/
+*.log
+.devsync-uploading
+.deployignore
+
+# --- editor noise ---
+.DS_Store
+Thumbs.db
+*.swp
+*~
+.idea/
+.vscode/
+
+# --- editorconfig: deploy it, it changes behaviour ---
+# (.editorconfig is intentionally NOT ignored)
